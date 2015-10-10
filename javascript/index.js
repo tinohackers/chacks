@@ -1,6 +1,6 @@
 $(document).ready(function() {
 	console.log("Page Loaded")
-	
+
 	$("#submitButton").click(function() {
 		console.log("inside submit button")
 		var url = $("#url-holder").val()
@@ -23,15 +23,15 @@ $(document).ready(function() {
 })
 
 function postToServer(myURL, myObject, mySuccess, myFailure) {
-	$.ajax({ 
+	$.ajax({
 		 url: myURL,
-		 data: myObject, 
+		 data: myObject,
 		 success: function(response) {
 			 mySuccess(response)
-		 }, 
+		 },
 		 error: function(xhr, status, error) {
 			 myFailure(xhr, status, error)
-		 }, 
+		 },
 		 dataType: "xml",
 		 type: "GET"
 	});
@@ -40,14 +40,14 @@ function postToServer(myURL, myObject, mySuccess, myFailure) {
 function getTranscript(key) {
 	var url = "http://video.google.com/timedtext";
 	var data = {"lang": "en", "v": key}
-	postToServer(url, 
-		data, 
+	postToServer(url,
+		data,
 		function(response) {
 			window.xmldoc = response;
 			convertXML()
-		}, 
-		function(xhr, status, error) { 
-			alert("Please enter a valid Youtube URL"); 
+		},
+		function(xhr, status, error) {
+			alert("Please enter a valid Youtube URL");
 		})
 }
 
@@ -58,7 +58,7 @@ function convertXML() {
 	for(item in data) {
 		var temp = {}
 		try {
-			temp["Text"] = data[item].textContent
+			temp["Text"] = escapeHtml(data[item].textContent)
 			temp["StartTime"] = data[item].getAttribute("start")
 			temp["Duration"] = data[item].getAttribute("dur")
 		}
@@ -112,5 +112,8 @@ function convertXML() {
 	console.log(superList2)
 }
 
-
-
+function escapeHtml(html) {
+    var txt = document.createElement("textarea");
+    txt.innerHTML = html;
+    return txt.value;
+}

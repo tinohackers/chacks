@@ -53,24 +53,19 @@ function getTranscript(key) {
 
 // Use double quotes on input text to be safe
 function getTextData(inputText){
-	inputText = encodeURI(inputText)
 	var url = "http://access.alchemyapi.com/calls/text/TextGetRankedNamedEntities";
-	var params = "apikey=1303953fc56522615a1c71880023e185263c2555&showSourceText=1outputMode=json&text=" + inputText;
-	var http = new XMLHttpRequest();
 
-	http.open("GET", url+"?"+params, true);
-	http.onreadystatechange = function()
-	{
-    	if(http.readyState == 4 && http.status == 200) {
-      	alert(http.responseText);
-    	}
-	}
-	http.send(null);
+	$.post(url, {
+		apikey: '1303953fc56522615a1c71880023e185263c2555',
+		outputMode: 'json',
+		text: inputText
+	}, function(JSON, status) {
+		//prints the entitity JSON --> need to parse this 
+		console.log(JSON);
+	});
 }
 
 function convertXML() {
-	getTextData("The US is currently under attack by Russia for it's foreign>< & % policy");
-
 	console.log(window.xmldoc)
 	var data = window.xmldoc.getElementsByTagName("text")
 	var superList = []
@@ -127,8 +122,18 @@ function convertXML() {
 			console.log(err)
 		}
 	}
-
 	console.log(superList2)
+	console.log(concatText(superList2))
+	getTextData(concatText(superList2));
+}
+
+// takes a list of dicationarys and returns concatenated text
+function concatText(superlist){
+	result = '';
+	for(var i = 0; i < superlist.length; i++){
+		result = result + superlist[i]["Text"];
+	}
+	return result;
 }
 
 function escapeHtml(html) {

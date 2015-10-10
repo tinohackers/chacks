@@ -1,0 +1,15 @@
+#mainLogo {
+	width: 100% !important;
+	font-size: 100px;
+	padding-top: 0px;
+}
+
+#mainLogoContainer {
+	padding-bottom: 20px;
+}
+
+#url-holder {
+	padding-bottom: 10px;
+	width: 400px;
+	height: 36px;
+}

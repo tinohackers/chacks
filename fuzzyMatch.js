@@ -14,7 +14,7 @@ function fuzzyMatch(sentence, listSentences){
     }
    if(temp > max){
      max = temp
-     ans = sentence
+     ans = listSentences.indexof(sent)
    }
 
   }

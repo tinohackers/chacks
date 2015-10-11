@@ -1,7 +1,7 @@
 $(document).ready(function() {
 	console.log("Page Loaded")
 
-	$("#submitButton").click(function() {
+	$("#Snipify").click(function() {
 		console.log("inside submit button")
 		var url = $("#url-holder").val()
 		var key = "";

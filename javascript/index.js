@@ -53,16 +53,48 @@ function getTranscript(key) {
 
 // Use double quotes on input text to be safe
 function getTextData(inputText){
-	var url = "http://access.alchemyapi.com/calls/text/TextGetRankedNamedEntities";
+	var relationships_url = "http://access.alchemyapi.com/calls/text/TextGetRelations";
 
-	$.post(url, {
+	var entities_dict = {}
+
+	$.post(relationships_url, {
 		apikey: '1303953fc56522615a1c71880023e185263c2555',
 		outputMode: 'json',
-		text: inputText
+		text: inputText,
+		maxRetrieve: '250',
+		entities: '1',
+		requireEntities: '1',
 	}, function(JSON, status) {
-		//prints the entitity JSON --> need to parse this
-		console.log(JSON);
+		for(var i = 0; i < JSON['relations'].length; i++){
+			if(JSON['relations'][i]['subject'].hasOwnProperty('entities')){
+				var ents = JSON['relations'][i]['subject']['entities'];
+				for(var j = 0; j < ents.length; j++){
+					if(entities_dict.hasOwnProperty(ents[j]['text'])){
+						if(entities_dict[ents[j]['text']].indexOf(JSON['relations'][i]['sentence']) == -1){
+							entities_dict[ents[j]['text']].push(JSON['relations'][i]['sentence']);
+						}
+					}
+					else{
+						entities_dict[ents[j]['text']] = [JSON['relations'][i]['sentence']];
+					}
+				}
+			}
+		}
+		console.log(entities_dict);
 	});
+
+	// $.post(alchemy_url, {
+	// 	apikey: '1303953fc56522615a1c71880023e185263c2555',
+	// 	outputMode: 'json',
+	// 	text: inputText
+	// }, function(JSON, status) {
+	//
+	// });
+
+}
+
+function parseAndDisplay(entities, relationships){
+
 }
 
 function convertXML() {
@@ -122,16 +154,20 @@ function convertXML() {
 			console.log(err)
 		}
 	}
-	console.log(superList2)
-	console.log(concatText(superList2))
-	getTextData(concatText(superList2));
+	//console.log(cleanText(concatText(superList2)));
+	getTextData(cleanText(concatText(superList2)));
+	//getTextData("PAUL FREEDMAN: Today were going to talk about the transformation of the Roman Empire. And I use the somewhat neutral and undramatic word se of the Roman Empire talking about the fall of the Western Empire. Next week we'll talk about the survival of the Eastern Empire. From 410 to 480, the Western Roman Empire disintegrated. It was dismembered by barbarian groups who were, except for the Huns, not really very barbarian. That is, they were not intent on mayhem and destruction. All they really wanted to do was to be part of the Empire, to share in its wealth and accomplishments, rather than to destroy it. Nevertheless, 476 is the conventional date for the end of the Western Empire, because in that year, a barbarian chieftain deposed a Roman emperor. Nothing very new about this for the fifth century. What was new is that this chieftain, whose name is spelled all sorts of different ways, but in Wickham, it's Odovacer. Sometimes he's known as Odacaer, Odovacar, Odovacer. We aren't even sure what so-called tribe he belonged to. A barbarian general deposed the child emperor Romulus Augustulus, who by an interesting coincidence, has the names of both the founder of the city of Rome and the founder of the Roman Empire. The -us on the end is little. It's a diminutive. So a man with this grandiose name, a child, deposed in 476. And instead of imposing another emperor, Odovacer simply wrote to Constantinople and said".replace(/\n/g, ''));
+}
+
+function cleanText(str) {
+	return str.replace(/\n/g, ' ');
 }
 
 // takes a list of dicationarys and returns concatenated text
 function concatText(superlist){
 	result = '';
 	for(var i = 0; i < superlist.length; i++){
-		result = result + superlist[i]["Text"];
+		result = result + superlist[i]["Text"] + ' ';
 	}
 	return result;
 }

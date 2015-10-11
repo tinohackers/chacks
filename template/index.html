@@ -17,6 +17,7 @@
     <!-- Custom CSS -->
     <link href="css/stylish-portfolio.css" rel="stylesheet">
     <link href="../CSS/index.css" rel="stylesheet">
+    <link href="css/c3.min.css" rel="stylesheet">
 
     <!-- Custom Fonts -->
     <link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
@@ -46,6 +47,10 @@
 		    	<input type="text" class="form-control" id="url-holder" placeholder="Enter Youtube URL">
 		  	</div>
 		  	<button class="btn btn-primary" id="Snipify">Snipify</button>
+        <div id="text-info">
+          <h2>Spending too much time watching lectures?</h2>
+          <p class="lead">Try Snipping your video.</p>
+        </div>
 		 </center>
 		</div>
 
@@ -56,18 +61,20 @@
     <section id="about" class="about">
         <div class="container">
             <div class="row">
-                <div class="col-lg-12 text-center">
-                    <h2>Spending too much time watching lectures?</h2>
-                    <p class="lead">Try Snipping your video.</p>
-                </div>
+              <div id="chart">
+
+              </div>
             </div>
             <!-- /.row -->
         </div>
         <!-- /.container -->
-      </section>
+    </section>
 
       <script src="js/jquery.js"></script>
       <script src="js/bootstrap.min.js"></script>
+      <script src="js/d3.min.js" charset="utf-8"></script>
+      <script src="js/c3.min.js"></script>
+      <script src="../javascript/fuzzyMatch.js"></script>
       <script src="../javascript/index.js"></script>
 </body>
 <html>

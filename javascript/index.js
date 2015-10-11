@@ -44,7 +44,7 @@ function getTranscript(key) {
 		data,
 		function(response) {
 			window.xmldoc = response;
-			convertXML()
+			convertXML();
 		},
 		function(xhr, status, error) {
 			alert("Please enter a valid Youtube URL");
@@ -52,9 +52,8 @@ function getTranscript(key) {
 }
 
 // Use double quotes on input text to be safe
-function getTextData(inputText){
+function getTextData(inputText, dictionary, list_sentences, findTime){
 	var relationships_url = "http://access.alchemyapi.com/calls/text/TextGetRelations";
-
 	var entities_dict = {}
 
 	$.post(relationships_url, {
@@ -65,37 +64,72 @@ function getTextData(inputText){
 		entities: '1',
 		requireEntities: '1',
 	}, function(JSON, status) {
+		var ents = [];
 		for(var i = 0; i < JSON['relations'].length; i++){
-			if(JSON['relations'][i]['subject'].hasOwnProperty('entities')){
-				var ents = JSON['relations'][i]['subject']['entities'];
+
+			var subject =  (JSON['relations'][i]['subject'] === undefined ? {} : JSON['relations'][i]['subject']);
+			var object = (JSON['relations'][i]['object'] === undefined ? {} : JSON['relations'][i]['object']);
+
+			if( subject.hasOwnProperty('entities') || object.hasOwnProperty('entities')){
+
+				if(subject['entities'] === undefined) { ents = object['entities']; }
+				else if(object['entities'] === undefined) { ents = subject['entities']; }
+				else{ ents = subject['entities'].concat(object['entities']); }
+
 				for(var j = 0; j < ents.length; j++){
 					if(entities_dict.hasOwnProperty(ents[j]['text'])){
-						if(entities_dict[ents[j]['text']].indexOf(JSON['relations'][i]['sentence']) == -1){
-							entities_dict[ents[j]['text']].push(JSON['relations'][i]['sentence']);
+						if(entities_dict[ents[j]['text']]['sentences'].indexOf(JSON['relations'][i]['sentence']) == -1){
+							entities_dict[ents[j]['text']]['sentences'].push({
+								text: fuzzyMatch(JSON['relations'][i]['sentence'], list_sentences(dictionary)),
+								time: findTime(fuzzyMatch(JSON['relations'][i]['sentence'], list_sentences(dictionary)), dictionary),
+							});
 						}
 					}
 					else{
-						entities_dict[ents[j]['text']] = [JSON['relations'][i]['sentence']];
+						entities_dict[ents[j]['text']] = {'sentences' : [{
+							text: fuzzyMatch(JSON['relations'][i]['sentence'], list_sentences(dictionary)),
+							time: findTime(fuzzyMatch(JSON['relations'][i]['sentence'], list_sentences(dictionary)), dictionary),
+						}]};
 					}
 				}
 			}
 		}
-		console.log(entities_dict);
+
+
+		// do stuff with the entities_dict data
+		var relevance = [];
+		var total = 0;
+		for(key in entities_dict){
+			if(entities_dict.hasOwnProperty(key)){
+				total += entities_dict[key]['sentences'].length;
+			}
+		}
+
+		for(key in entities_dict){
+			relevance.push([key, entities_dict[key]['sentences'].length / total * 100]);
+		}
+
+		console.log(relevance);
+
+		var chart = c3.generate({
+			bindto: '#chart',
+	    data: {
+	        columns: relevance,
+	        type : 'donut',
+	        onclick: function (d, i) { console.log("onclick", d, i); },
+	        onmouseover: function (d, i) { console.log("onmouseover", d, i); },
+	        onmouseout: function (d, i) { console.log("onmouseout", d, i); }
+	    },
+	    donut: {
+	        title: "Relevance"
+	    }
+		});
+
+
 	});
 
-	// $.post(alchemy_url, {
-	// 	apikey: '1303953fc56522615a1c71880023e185263c2555',
-	// 	outputMode: 'json',
-	// 	text: inputText
-	// }, function(JSON, status) {
-	//
-	// });
-
 }
 
-function parseAndDisplay(entities, relationships){
-
-}
 
 function convertXML() {
 	openLinks(['http://www.google.com', 'http://www.nfl.com']);
@@ -156,7 +190,9 @@ function convertXML() {
 		}
 	}
 	//console.log(cleanText(concatText(superList2)));
-	getTextData(cleanText(concatText(superList2)));
+	//console.log(fuzzyMatch("I'll take every view that Socrates puts forward as a view of Plato's, though I'll typically sort of run back and forth sort of in a careless fashion.", listSentences(superList2)));
+	//console.log(listSentences(superList2));
+	getTextData(cleanText(concatText(superList2)), superList2, listSentences, findtimes);
 	//getTextData("PAUL FREEDMAN: Today were going to talk about the transformation of the Roman Empire. And I use the somewhat neutral and undramatic word se of the Roman Empire talking about the fall of the Western Empire. Next week we'll talk about the survival of the Eastern Empire. From 410 to 480, the Western Roman Empire disintegrated. It was dismembered by barbarian groups who were, except for the Huns, not really very barbarian. That is, they were not intent on mayhem and destruction. All they really wanted to do was to be part of the Empire, to share in its wealth and accomplishments, rather than to destroy it. Nevertheless, 476 is the conventional date for the end of the Western Empire, because in that year, a barbarian chieftain deposed a Roman emperor. Nothing very new about this for the fifth century. What was new is that this chieftain, whose name is spelled all sorts of different ways, but in Wickham, it's Odovacer. Sometimes he's known as Odacaer, Odovacar, Odovacer. We aren't even sure what so-called tribe he belonged to. A barbarian general deposed the child emperor Romulus Augustulus, who by an interesting coincidence, has the names of both the founder of the city of Rome and the founder of the Roman Empire. The -us on the end is little. It's a diminutive. So a man with this grandiose name, a child, deposed in 476. And instead of imposing another emperor, Odovacer simply wrote to Constantinople and said".replace(/\n/g, ''));
 }
 
@@ -171,6 +207,19 @@ function concatText(superlist){
 		result = result + superlist[i]["Text"] + ' ';
 	}
 	return result;
+}
+
+//takes a list of dictionarys and returns list of all sentences
+function listSentences(superlist){
+	return superlist.map(function(elem) { return elem["Text"]; });
+}
+
+function findtimes(sentence, superlist){
+	for(var i = 0; i < superlist.length-1; i++){
+		if(superlist[i]["Text"] === sentence){
+			return [superlist[i]["StartTime"], superlist[i+1]["StartTime"] - superlist[i]["StartTime"]];
+		}
+	}
 }
 
 function escapeHtml(html) {

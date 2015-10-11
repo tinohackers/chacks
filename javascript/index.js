@@ -81,9 +81,19 @@ function getTextData(inputText, listSentences){
 		entities: '1',
 		requireEntities: '1',
 	}, function(JSON, status) {
+		//console.log(JSON);
+		var ents = [];
 		for(var i = 0; i < JSON['relations'].length; i++){
-			if(JSON['relations'][i]['subject'].hasOwnProperty('entities')){
-				var ents = JSON['relations'][i]['subject']['entities'];
+
+			var subject =  (JSON['relations'][i]['subject'] === undefined ? {} : JSON['relations'][i]['subject']);
+			var object = (JSON['relations'][i]['object'] === undefined ? {} : JSON['relations'][i]['object']);
+
+			if( subject.hasOwnProperty('entities') || object.hasOwnProperty('entities')){
+
+				if(subject['entities'] === undefined) { ents = object['entities']; }
+				else if(object['entities'] === undefined) { ents = subject['entities']; }
+				else{ ents = subject['entities'].concat(object['entities']); }
+
 				for(var j = 0; j < ents.length; j++){
 					if(entities_dict.hasOwnProperty(ents[j]['text'])){
 						if(entities_dict[ents[j]['text']]['sentences'].indexOf(JSON['relations'][i]['sentence']) == -1){
@@ -100,7 +110,7 @@ function getTextData(inputText, listSentences){
 		for(key in entities_dict){
 			if(entities_dict.hasOwnProperty(key)){
 				for(var i = 0; i < entities_dict[key]['sentences'].length; i++){
-					console.log(entities_dict[key]['sentences'][i],' ==> ', fuzzyMatch(entities_dict[key]['sentences'][i], listSentences));
+					//console.log(entities_dict[key]['sentences'][i],' ==> ', fuzzyMatch(entities_dict[key]['sentences'][i], listSentences));
 				}
 			}
 		}

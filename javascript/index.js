@@ -60,7 +60,7 @@ function getTextData(inputText){
 		outputMode: 'json',
 		text: inputText
 	}, function(JSON, status) {
-		//prints the entitity JSON --> need to parse this 
+		//prints the entitity JSON --> need to parse this
 		console.log(JSON);
 	});
 }
@@ -139,5 +139,5 @@ function concatText(superlist){
 function escapeHtml(html) {
     var txt = document.createElement("textarea");
     txt.innerHTML = html;
-    return txt.value;
+    return txt.value.replace(/(?:\r\n|\r|\n)/g, ' ');
 }

@@ -1,5 +1,7 @@
 $(document).ready(function() {
-	console.log("Page Loaded")
+	console.log("Page Loaded");
+
+	$('#about').hide();
 
 	$("#Snipify").click(function() {
 		console.log("inside submit button")
@@ -95,11 +97,10 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 			}
 		}
 
-		console.log(entities_dict);
-	function wikiCall(word){
+	function wikiCall(word, j){
 		$.ajax({
 			 type: "GET",
-			 url: "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro&explaintext&titles=" + word + "&callback=?",
+			 url: "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro&explaintext&redirects&titles=" + word + "&callback=?",
 			 contentType: "application/json; charset=utf-8",
 			 async: false,
 			 dataType: "json",
@@ -116,7 +117,10 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 								 }
 							}
 					 }
+					 $('#entity-data').append("<div class='list-group'> <a id='entity'" + j.toString() + " class='list-group-item'><h4 class='list-group-item-heading'>" + word + "</h4><p class='list-group-item-text'>" + string + "</p></a></div>");
+					//  $('#entity' + j.toString()).find('h4').text(word);
 					 console.log(string);
+					//  $('#entity' + j.toString()).find('p').val(string);
 			 },
 			 error: function (errorMessage) {
 			 }
@@ -135,19 +139,23 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 			relevance.push([key, entities_dict[key]['sentences'].length / total * 100]);
 		}
 
+		for(var i = 0; i < relevance.length; i++){
+			wikiCall(relevance[i][0], i+1)
+		}
+
 		console.log(relevance);
+
+		$('#about').show();
 
 		var chart = c3.generate({
 			bindto: '#chart',
 	    data: {
 	        columns: relevance,
 	        type : 'donut',
-	        onclick: function (d, i) { console.log("onclick", d, i); },
 	        onmouseover: function (d, i) { console.log("onmouseover", d, i); },
-	        onmouseout: function (d, i) { console.log("onmouseout", d, i); }
 	    },
 	    donut: {
-	        title: "Relevance"
+	        title: "Relevance of Keywords"
 	    }
 		});
 
@@ -215,11 +223,7 @@ function convertXML() {
 			console.log(err)
 		}
 	}
-	//console.log(cleanText(concatText(superList2)));
-	//console.log(fuzzyMatch("I'll take every view that Socrates puts forward as a view of Plato's, though I'll typically sort of run back and forth sort of in a careless fashion.", listSentences(superList2)));
-	//console.log(listSentences(superList2));
 	getTextData(cleanText(concatText(superList2)), superList2, listSentences, findtimes);
-	//getTextData("PAUL FREEDMAN: Today were going to talk about the transformation of the Roman Empire. And I use the somewhat neutral and undramatic word se of the Roman Empire talking about the fall of the Western Empire. Next week we'll talk about the survival of the Eastern Empire. From 410 to 480, the Western Roman Empire disintegrated. It was dismembered by barbarian groups who were, except for the Huns, not really very barbarian. That is, they were not intent on mayhem and destruction. All they really wanted to do was to be part of the Empire, to share in its wealth and accomplishments, rather than to destroy it. Nevertheless, 476 is the conventional date for the end of the Western Empire, because in that year, a barbarian chieftain deposed a Roman emperor. Nothing very new about this for the fifth century. What was new is that this chieftain, whose name is spelled all sorts of different ways, but in Wickham, it's Odovacer. Sometimes he's known as Odacaer, Odovacar, Odovacer. We aren't even sure what so-called tribe he belonged to. A barbarian general deposed the child emperor Romulus Augustulus, who by an interesting coincidence, has the names of both the founder of the city of Rome and the founder of the Roman Empire. The -us on the end is little. It's a diminutive. So a man with this grandiose name, a child, deposed in 476. And instead of imposing another emperor, Odovacer simply wrote to Constantinople and said".replace(/\n/g, ''));
 }
 
 function cleanText(str) {

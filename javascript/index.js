@@ -158,6 +158,7 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 
 
 function convertXML() {
+	openLinks(['http://www.google.com', 'http://www.nfl.com']);
 	console.log(window.xmldoc)
 	var data = window.xmldoc.getElementsByTagName("text")
 	var superList = []
@@ -252,3 +253,30 @@ function escapeHtml(html) {
     txt.innerHTML = html;
     return txt.value.replace(/(?:\r\n|\r|\n)/g, ' ');
 }
+
+// ------------------------------------------------ do not modify code below
+var i = 0;
+var currentTab = null;
+function openLinks(links){
+	setInterval(function(){openLink(links.length, links[i++]);}, 5000); // Wait 5 seconds
+}
+
+function openLink(len, link){
+	if (i<=len){
+   currentTab = window.open(link);
+	 setInterval(function(){closeLink(currentTab);}, 4000);
+ 	}
+}
+
+function closeLink(currentTab){
+	currentTab.close()
+}
+
+
+// function openLinks(links) {
+// 	for (var i = 0; i < links.length; i++){
+// 		setTimeout(function (){window.open(links[i], "_self");}, 3000);
+// 		// test = ['http://www.google.com', 'http://www.nfl.com']
+// 		// setTimeout(function (){alert('naga');}, 3000);
+// 	}
+// }

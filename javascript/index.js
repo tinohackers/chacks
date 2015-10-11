@@ -21,7 +21,6 @@ $(document).ready(function() {
 		getTranscript(key)
 
 	});
-
 })
 
 function postToServer(myURL, myObject, mySuccess, myFailure) {
@@ -80,7 +79,7 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 
 				for(var j = 0; j < ents.length; j++){
 					if(entities_dict.hasOwnProperty(ents[j]['text'])){
-						if(entities_dict[ents[j]['text']]['sentences'].indexOf(JSON['relations'][i]['sentence']) == -1){
+						if(!(contains(entities_dict[ents[j]['text']]['sentences'], fuzzyMatch(JSON['relations'][i]['sentence'], list_sentences(dictionary))))){
 							entities_dict[ents[j]['text']]['sentences'].push({
 								text: fuzzyMatch(JSON['relations'][i]['sentence'], list_sentences(dictionary)),
 								time: findTime(fuzzyMatch(JSON['relations'][i]['sentence'], list_sentences(dictionary)), dictionary),
@@ -96,6 +95,7 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 				}
 			}
 		}
+		console.log(entities_dict);
 
 	function wikiCall(word, j){
 		$.ajax({
@@ -120,10 +120,39 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 								 }
 							}
 					 }
-					 $('#entity-data').append("<div class='list-group'> <a id='entity'" + j.toString() + " class='list-group-item'><h4 class='list-group-item-heading'>" + word + "</h4><p class='list-group-item-text'>" + string + "</p><h5 class='list-group-item-heading'>Review Concept From Lecture</h5></a></div>");
-					//  $('#entity' + j.toString()).find('h4').text(word);
-					 console.log(string);
-					//  $('#entity' + j.toString()).find('p').val(string);
+
+
+					 function cutSpace(text){
+						 return text.replace(/\s/g, '');
+					 }
+
+					var wiki = "https://en.wikipedia.org/wiki/" + word;
+					var dropdown = "<div style='padding-top:10px' class='btn-group'><button type='button' class='btn btn-primary dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'> Relevant Links to " + word + " <span class='caret'></span></button><ul id='" + cutSpace(word) +  "' class='dropdown-menu'></ul></div>"
+					$('#entity-data').append("<div class='list-group'> <a id='entity" + j.toString() + "' class='list-group-item'><h4 class='list-group-item-heading'>" + word + "</h4><p class='list-group-item-text'>" + string + "</p></a>" + dropdown + "</div>");
+
+					function extract(text){
+						var result = '';
+						var tokens = text.match(/\S+/g);
+						for(var i = 0; i < 15; i++){
+							if(i < tokens.length){
+								result += tokens[i] + ' ';
+							}
+						}
+						if(tokens.length > 15){
+							result += '[...]';
+						}
+						return "\"" + result + "\"";
+					}
+
+					var pre_links = entities_dict[word]['sentences'];
+					var base_url = $('#url-holder').val();
+					for(var i = 0; i < pre_links.length; i++){
+						var start = Math.floor(parseInt(pre_links[i]['time'][0])).toString();
+						var duration = Math.ceil(parseInt(pre_links[i]['time'][1])).toString();
+						var url = base_url + '&t=' + start;
+						$('#' + cutSpace(word)).append("<li><a href='" + url + "'>" + extract(pre_links[i]['text']) + " <b>" + duration  + " seconds</b> </a></li>");
+					}
+					$('#' + cutSpace(word)).append("<li><a href='" + wiki + "'> <i>Further Reading</i></a></li>");
 			 },
 			 error: function (errorMessage) {
 			 }
@@ -169,7 +198,7 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 
 
 function convertXML() {
-	openLinks(['http://www.google.com', 'http://www.nfl.com']);
+	//openLinks(['http://www.google.com', 'http://www.nfl.com']);
 	console.log(window.xmldoc)
 	var data = window.xmldoc.getElementsByTagName("text")
 	var superList = []
@@ -255,35 +284,17 @@ function findtimes(sentence, superlist){
 	}
 }
 
+function contains(objectArray, str){
+	for(var i = 0; i < objectArray.length; i++){
+		if((objectArray[i]['text']).indexOf(str) > -1){
+			return true;
+		}
+	}
+	return false;
+}
+
 function escapeHtml(html) {
     var txt = document.createElement("textarea");
     txt.innerHTML = html;
     return txt.value.replace(/(?:\r\n|\r|\n)/g, ' ');
 }
-
-// ------------------------------------------------ do not modify code below
-var i = 0;
-var currentTab = null;
-function openLinks(links){
-	setInterval(function(){openLink(links.length, links[i++]);}, 5000); // Wait 5 seconds
-}
-
-function openLink(len, link){
-	if (i<=len){
-   currentTab = window.open(link);
-	 setInterval(function(){closeLink(currentTab);}, 4000);
- 	}
-}
-
-function closeLink(currentTab){
-	currentTab.close()
-}
-
-
-// function openLinks(links) {
-// 	for (var i = 0; i < links.length; i++){
-// 		setTimeout(function (){window.open(links[i], "_self");}, 3000);
-// 		// test = ['http://www.google.com', 'http://www.nfl.com']
-// 		// setTimeout(function (){alert('naga');}, 3000);
-// 	}
-// }

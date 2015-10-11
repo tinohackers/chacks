@@ -95,7 +95,33 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 			}
 		}
 
+		console.log(entities_dict);
+	function wikiCall(word){
+		$.ajax({
+			 type: "GET",
+			 url: "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro&explaintext&titles=" + word + "&callback=?",
+			 contentType: "application/json; charset=utf-8",
+			 async: false,
+			 dataType: "json",
+			 success: function (data, textStatus, jqXHR) {
+					 var queries = data["query"]["pages"];
+					 for(key in queries){
 
+							if(data["query"]["pages"].hasOwnProperty(key)){
+								 dataString = data["query"]["pages"][key]["extract"];
+								 dataStringEdited = dataString.split(".");
+								 var string = "";
+								 for(var i = 0; i < 3; i++){
+									 string += dataStringEdited[i] + ". ";
+								 }
+							}
+					 }
+					 console.log(string);
+			 },
+			 error: function (errorMessage) {
+			 }
+	 });
+ }
 		// do stuff with the entities_dict data
 		var relevance = [];
 		var total = 0;

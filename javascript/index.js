@@ -20,23 +20,6 @@ $(document).ready(function() {
 
 	});
 
-	// var chart = c3.generate({
-	// 	bindto: '#chart',
-  //   data: {
-  //       columns: [
-  //           ['data1', 30],
-  //           ['data2', 120],
-  //       ],
-  //       type : 'donut',
-  //       onclick: function (d, i) { console.log("onclick", d, i); },
-  //       onmouseover: function (d, i) { console.log("onmouseover", d, i); },
-  //       onmouseout: function (d, i) { console.log("onmouseout", d, i); }
-  //   },
-  //   donut: {
-  //       title: "Iris Petal Width"
-  //   }
-	// });
-
 })
 
 function postToServer(myURL, myObject, mySuccess, myFailure) {
@@ -112,8 +95,35 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 			}
 		}
 
-		// do stuff with the entities_dict data
 
+		// do stuff with the entities_dict data
+		var relevance = [];
+		var total = 0;
+		for(key in entities_dict){
+			if(entities_dict.hasOwnProperty(key)){
+				total += entities_dict[key]['sentences'].length;
+			}
+		}
+
+		for(key in entities_dict){
+			relevance.push([key, entities_dict[key]['sentences'].length / total * 100]);
+		}
+
+		console.log(relevance);
+
+		var chart = c3.generate({
+			bindto: '#chart',
+	    data: {
+	        columns: relevance,
+	        type : 'donut',
+	        onclick: function (d, i) { console.log("onclick", d, i); },
+	        onmouseover: function (d, i) { console.log("onmouseover", d, i); },
+	        onmouseout: function (d, i) { console.log("onmouseout", d, i); }
+	    },
+	    donut: {
+	        title: "Relevance"
+	    }
+		});
 
 
 	});

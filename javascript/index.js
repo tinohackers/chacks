@@ -63,6 +63,7 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 		text: inputText,
 		maxRetrieve: '250',
 		entities: '1',
+		sentiment: '1',
 		requireEntities: '1',
 	}, function(JSON, status) {
 		var ents = [];
@@ -83,6 +84,7 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 							entities_dict[ents[j]['text']]['sentences'].push({
 								text: fuzzyMatch(JSON['relations'][i]['sentence'], list_sentences(dictionary)),
 								time: findTime(fuzzyMatch(JSON['relations'][i]['sentence'], list_sentences(dictionary)), dictionary),
+								sentiment: object['sentiment'],
 							});
 						}
 					}
@@ -175,9 +177,31 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 			wikiCall(relevance[i][0], i+1)
 		}
 
+		sentiments = [];
+
+		for(key in entities_dict){
+			var sents = [];
+			var s_times = [];
+			for(var i = 0; i < entities_dict[key]['sentences'].length; i++){
+				if(entities_dict[key]['sentences'][i]['sentiment'] !== undefined){
+					sents.push(parseFloat(entities_dict[key]['sentences'][i]['sentiment']['score']));
+					s_times.push(parseFloat(entities_dict[key]['sentences'][i]['time'][0]));
+				}
+			}
+			if(sents.length >= 3){
+				var temp = {};
+				temp[key] = [sents, s_times];
+				sentiments.push(temp);
+			}
+		}
+
+		console.log(sentiments);
+
 		console.log(relevance);
 
 		$('#about').show();
+
+
 
 		var chart = c3.generate({
 			bindto: '#chart',
@@ -191,6 +215,64 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 	    }
 		});
 
+		for(var i = 0; i < sentiments.length; i++){
+			$('#special').append("<div id='sentiment" + i.toString() + "'></div> ");
+		}
+
+		for(var i = 0; i < sentiments.length; i++){
+			for(key in sentiments[i]){
+				if(sentiments[i].hasOwnProperty(key)){
+					var emots = sentiments[i][key][0];
+					var times = sentiments[i][key][1];
+					var l = c3.generate({
+						bindto: '#sentiment' + i.toString(),
+						data: {
+							xs: {
+								'sentiment': 'time',
+							},
+							columns: [
+								['time'].concat(times),
+								['sentiment'].concat(emots),
+							]
+						}
+					});
+				}
+			}
+		}
+
+		// var l = c3.generate({
+		// 	bindto: '#sentiment0',
+		// 	data: {
+		// 			xs: {
+		// 					'data1': 'x1',
+		// 					'data2': 'x2',
+		// 			},
+		// 			columns: [
+		// 					['x1', 10, 30, 45, 50, 70, 100],
+		// 					['x2', 30, 50, 75, 100, 120],
+		// 					['data1', 30, 200, 100, 400, 150, 250],
+		// 					['data2', 20, 180, 240, 100, 190]
+		// 			]
+		// 	}
+		// });
+
+		// for(var i = 0; i < sentiments.length; i++){
+		// 	var sentiment0 = c3.generate({
+		// 		bindto: '#sentiment0',
+		// 		data: {
+		// 				xs: {
+		// 						'data1': 'x1',
+		// 						'data2': 'x2',
+		// 				},
+		// 				columns: [
+		// 						['x1', 10, 30, 45, 50, 70, 100],
+		// 						['x2', 30, 50, 75, 100, 120],
+		// 						['data1', 30, 200, 100, 400, 150, 250],
+		// 						['data2', 20, 180, 240, 100, 190]
+		// 				]
+		// 		}
+		// 	});
+		// }
 
 	});
 

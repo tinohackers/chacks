@@ -215,30 +215,51 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 	    }
 		});
 
-		for(var i = 0; i < sentiments.length; i++){
-			$('#special').append("<div id='sentiment" + i.toString() + "'></div> ");
-		}
+		// $('#special').append(" ");
+		$('#special').append("<div id='sentiment'></div> ");
+
+		var data_s = {};
+		var xs = {};
+		var columns = [];
 
 		for(var i = 0; i < sentiments.length; i++){
 			for(key in sentiments[i]){
 				if(sentiments[i].hasOwnProperty(key)){
 					var emots = sentiments[i][key][0];
 					var times = sentiments[i][key][1];
-					var l = c3.generate({
-						bindto: '#sentiment' + i.toString(),
-						data: {
-							xs: {
-								'sentiment': 'time',
-							},
-							columns: [
-								['time'].concat(times),
-								['sentiment'].concat(emots),
-							]
-						}
-					});
+					xs[key] = 'time' + i.toString();
+					columns.push(['time' + i.toString()].concat(times));
+					columns.push([key].concat(emots));
 				}
 			}
 		}
+
+		data_s['xs'] = xs;
+		data_s['columns'] = columns;
+
+		console.log(data_s);
+
+		var l = c3.generate({
+			bindto: '#sentiment',
+			padding: {
+				top: 80,
+			},
+			data: data_s,
+			axis: {
+			 x: {
+					 label: 'Time'
+			 },
+			 y: {
+					 label: 'Sentiment'
+			 },
+	 		}
+		});
+
+		d3.select("#sentiment").append("text")
+    .attr("x", 150)
+    .attr("y", 50)
+    .style("text-align", "center")
+    .text("Sentiment over Time of Keywords");
 
 		// var l = c3.generate({
 		// 	bindto: '#sentiment0',

@@ -228,6 +228,7 @@ function escapeHtml(html) {
     return txt.value.replace(/(?:\r\n|\r|\n)/g, ' ');
 }
 
+// ------------------------------------------------ do not modify code below
 var i = 0;
 var currentTab = null;
 function openLinks(links){

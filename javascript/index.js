@@ -1,5 +1,7 @@
 $(document).ready(function() {
-	console.log("Page Loaded")
+	console.log("Page Loaded");
+
+	$('#about').hide();
 
 	$("#Snipify").click(function() {
 		console.log("inside submit button")
@@ -19,7 +21,6 @@ $(document).ready(function() {
 		getTranscript(key)
 
 	});
-
 })
 
 function postToServer(myURL, myObject, mySuccess, myFailure) {
@@ -62,6 +63,7 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 		text: inputText,
 		maxRetrieve: '250',
 		entities: '1',
+		sentiment: '1',
 		requireEntities: '1',
 	}, function(JSON, status) {
 		var ents = [];
@@ -78,10 +80,11 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 
 				for(var j = 0; j < ents.length; j++){
 					if(entities_dict.hasOwnProperty(ents[j]['text'])){
-						if(entities_dict[ents[j]['text']]['sentences'].indexOf(JSON['relations'][i]['sentence']) == -1){
+						if(!(contains(entities_dict[ents[j]['text']]['sentences'], fuzzyMatch(JSON['relations'][i]['sentence'], list_sentences(dictionary))))){
 							entities_dict[ents[j]['text']]['sentences'].push({
 								text: fuzzyMatch(JSON['relations'][i]['sentence'], list_sentences(dictionary)),
 								time: findTime(fuzzyMatch(JSON['relations'][i]['sentence'], list_sentences(dictionary)), dictionary),
+								sentiment: object['sentiment'],
 							});
 						}
 					}
@@ -94,8 +97,69 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 				}
 			}
 		}
+		console.log(entities_dict);
+
+	function wikiCall(word, j){
+		$.ajax({
+			 type: "GET",
+			 url: "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro&explaintext&redirects&titles=" + word + "&callback=?",
+			 contentType: "application/json; charset=utf-8",
+			 async: false,
+			 dataType: "json",
+			 success: function (data, textStatus, jqXHR) {
+					 var queries = data["query"]["pages"];
+					 for(key in queries){
+
+							if(data["query"]["pages"].hasOwnProperty(key)){
+								 dataString = data["query"]["pages"][key]["extract"];
+								 dataStringEdited = dataString.split(".");
+								 var string = "";
+								 for(var i = 0; i < 3; i++){
+									 string += dataStringEdited[i] + ". ";
+								 }
+								 if(dataStringEdited[0].indexOf("may refer to") >= 0){
+									 string = "https://en.wikipedia.org/wiki/" + word
+								 }
+							}
+					 }
 
 
+					 function cutSpace(text){
+						 return text.replace(/\s/g, '');
+					 }
+
+					var wiki = "https://en.wikipedia.org/wiki/" + word;
+					var dropdown = "<div style='padding-top:10px' class='btn-group'><button type='button' class='btn btn-primary dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'> Relevant Links to " + word + " <span class='caret'></span></button><ul id='" + cutSpace(word) +  "' class='dropdown-menu'></ul></div>"
+					$('#entity-data').append("<div class='list-group'> <a id='entity" + j.toString() + "' class='list-group-item'><h4 class='list-group-item-heading'>" + word + "</h4><p class='list-group-item-text'>" + string + "</p></a>" + dropdown + "</div>");
+
+					function extract(text){
+						var result = '';
+						var tokens = text.match(/\S+/g);
+						for(var i = 0; i < 15; i++){
+							if(i < tokens.length){
+								result += tokens[i] + ' ';
+							}
+						}
+						if(tokens.length > 15){
+							result += '[...]';
+						}
+						return "\"" + result + "\"";
+					}
+
+					var pre_links = entities_dict[word]['sentences'];
+					var base_url = $('#url-holder').val();
+					for(var i = 0; i < pre_links.length; i++){
+						var start = Math.floor(parseInt(pre_links[i]['time'][0])).toString();
+						var duration = Math.ceil(parseInt(pre_links[i]['time'][1])).toString();
+						var url = base_url + '&t=' + start;
+						$('#' + cutSpace(word)).append("<li><a href='" + url + "'>" + extract(pre_links[i]['text']) + " <b>" + duration  + " seconds</b> </a></li>");
+					}
+					$('#' + cutSpace(word)).append("<li><a href='" + wiki + "'> <i>Further Reading</i></a></li>");
+			 },
+			 error: function (errorMessage) {
+			 }
+	 });
+ }
 		// do stuff with the entities_dict data
 		var relevance = [];
 		var total = 0;
@@ -109,22 +173,106 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 			relevance.push([key, entities_dict[key]['sentences'].length / total * 100]);
 		}
 
+		for(var i = 0; i < relevance.length; i++){
+			wikiCall(relevance[i][0], i+1)
+		}
+
+		sentiments = [];
+
+		for(key in entities_dict){
+			var sents = [];
+			var s_times = [];
+			for(var i = 0; i < entities_dict[key]['sentences'].length; i++){
+				if(entities_dict[key]['sentences'][i]['sentiment'] !== undefined){
+					sents.push(parseFloat(entities_dict[key]['sentences'][i]['sentiment']['score']));
+					s_times.push(parseFloat(entities_dict[key]['sentences'][i]['time'][0]));
+				}
+			}
+			if(sents.length >= 3){
+				var temp = {};
+				temp[key] = [sents, s_times];
+				sentiments.push(temp);
+			}
+		}
+
+		console.log(sentiments);
+
 		console.log(relevance);
+
+		$('#about').show();
+
+
 
 		var chart = c3.generate({
 			bindto: '#chart',
 	    data: {
 	        columns: relevance,
 	        type : 'donut',
-	        onclick: function (d, i) { console.log("onclick", d, i); },
 	        onmouseover: function (d, i) { console.log("onmouseover", d, i); },
-	        onmouseout: function (d, i) { console.log("onmouseout", d, i); }
 	    },
 	    donut: {
-	        title: "Relevance"
+	        title: "Relevance of Keywords"
 	    }
 		});
 
+		for(var i = 0; i < sentiments.length; i++){
+			$('#special').append("<div id='sentiment" + i.toString() + "'></div> ");
+		}
+
+		for(var i = 0; i < sentiments.length; i++){
+			for(key in sentiments[i]){
+				if(sentiments[i].hasOwnProperty(key)){
+					var emots = sentiments[i][key][0];
+					var times = sentiments[i][key][1];
+					var l = c3.generate({
+						bindto: '#sentiment' + i.toString(),
+						data: {
+							xs: {
+								'sentiment': 'time',
+							},
+							columns: [
+								['time'].concat(times),
+								['sentiment'].concat(emots),
+							]
+						}
+					});
+				}
+			}
+		}
+
+		// var l = c3.generate({
+		// 	bindto: '#sentiment0',
+		// 	data: {
+		// 			xs: {
+		// 					'data1': 'x1',
+		// 					'data2': 'x2',
+		// 			},
+		// 			columns: [
+		// 					['x1', 10, 30, 45, 50, 70, 100],
+		// 					['x2', 30, 50, 75, 100, 120],
+		// 					['data1', 30, 200, 100, 400, 150, 250],
+		// 					['data2', 20, 180, 240, 100, 190]
+		// 			]
+		// 	}
+		// });
+
+		// for(var i = 0; i < sentiments.length; i++){
+		// 	var sentiment0 = c3.generate({
+		// 		bindto: '#sentiment0',
+		// 		data: {
+		// 				xs: {
+		// 						'data1': 'x1',
+		// 						'data2': 'x2',
+		// 				},
+		// 				columns: [
+		// 						['x1', 10, 30, 45, 50, 70, 100],
+		// 						['x2', 30, 50, 75, 100, 120],
+		// 						['data1', 30, 200, 100, 400, 150, 250],
+		// 						['data2', 20, 180, 240, 100, 190]
+		// 				]
+		// 		}
+		// 	});
+		// }
 
 	});
 
@@ -132,7 +280,7 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 
 
 function convertXML() {
-	openLinks(['http://www.google.com', 'http://www.nfl.com']);
+	//openLinks(['http://www.google.com', 'http://www.nfl.com']);
 	console.log(window.xmldoc)
 	var data = window.xmldoc.getElementsByTagName("text")
 	var superList = []
@@ -189,11 +337,7 @@ function convertXML() {
 			console.log(err)
 		}
 	}
-	//console.log(cleanText(concatText(superList2)));
-	//console.log(fuzzyMatch("I'll take every view that Socrates puts forward as a view of Plato's, though I'll typically sort of run back and forth sort of in a careless fashion.", listSentences(superList2)));
-	//console.log(listSentences(superList2));
 	getTextData(cleanText(concatText(superList2)), superList2, listSentences, findtimes);
-	//getTextData("PAUL FREEDMAN: Today were going to talk about the transformation of the Roman Empire. And I use the somewhat neutral and undramatic word se of the Roman Empire talking about the fall of the Western Empire. Next week we'll talk about the survival of the Eastern Empire. From 410 to 480, the Western Roman Empire disintegrated. It was dismembered by barbarian groups who were, except for the Huns, not really very barbarian. That is, they were not intent on mayhem and destruction. All they really wanted to do was to be part of the Empire, to share in its wealth and accomplishments, rather than to destroy it. Nevertheless, 476 is the conventional date for the end of the Western Empire, because in that year, a barbarian chieftain deposed a Roman emperor. Nothing very new about this for the fifth century. What was new is that this chieftain, whose name is spelled all sorts of different ways, but in Wickham, it's Odovacer. Sometimes he's known as Odacaer, Odovacar, Odovacer. We aren't even sure what so-called tribe he belonged to. A barbarian general deposed the child emperor Romulus Augustulus, who by an interesting coincidence, has the names of both the founder of the city of Rome and the founder of the Roman Empire. The -us on the end is little. It's a diminutive. So a man with this grandiose name, a child, deposed in 476. And instead of imposing another emperor, Odovacer simply wrote to Constantinople and said".replace(/\n/g, ''));
 }
 
 function cleanText(str) {
@@ -222,34 +366,17 @@ function findtimes(sentence, superlist){
 	}
 }
 
+function contains(objectArray, str){
+	for(var i = 0; i < objectArray.length; i++){
+		if((objectArray[i]['text']).indexOf(str) > -1){
+			return true;
+		}
+	}
+	return false;
+}
+
 function escapeHtml(html) {
     var txt = document.createElement("textarea");
     txt.innerHTML = html;
     return txt.value.replace(/(?:\r\n|\r|\n)/g, ' ');
 }
-
-var i = 0;
-var currentTab = null;
-function openLinks(links){
-	setInterval(function(){openLink(links.length, links[i++]);}, 5000); // Wait 5 seconds
-}
-
-function openLink(len, link){
-	if (i<=len){
-   currentTab = window.open(link);
-	 setInterval(function(){closeLink(currentTab);}, 4000);
- 	}
-}
-
-function closeLink(currentTab){
-	currentTab.close()
-}
-
-
-// function openLinks(links) {
-// 	for (var i = 0; i < links.length; i++){
-// 		setTimeout(function (){window.open(links[i], "_self");}, 3000);
-// 		// test = ['http://www.google.com', 'http://www.nfl.com']
-// 		// setTimeout(function (){alert('naga');}, 3000);
-// 	}
-// }

@@ -117,7 +117,7 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 								 }
 							}
 					 }
-					 $('#entity-data').append("<div class='list-group'> <a id='entity'" + j.toString() + " class='list-group-item'><h4 class='list-group-item-heading'>" + word + "</h4><p class='list-group-item-text'>" + string + "</p></a></div>");
+					 $('#entity-data').append("<div class='list-group'> <a id='entity'" + j.toString() + " class='list-group-item'><h4 class='list-group-item-heading'>" + word + "</h4><p class='list-group-item-text'>" + string + "</p><h5 class='list-group-item-heading'>Review Concept From Lecture</h5></a></div>");
 					//  $('#entity' + j.toString()).find('h4').text(word);
 					 console.log(string);
 					//  $('#entity' + j.toString()).find('p').val(string);

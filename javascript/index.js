@@ -115,6 +115,9 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
 								 for(var i = 0; i < 3; i++){
 									 string += dataStringEdited[i] + ". ";
 								 }
+								 if(dataStringEdited[0].indexOf("may refer to") >= 0){
+									 string = "https://en.wikipedia.org/wiki/" + word
+								 }
 							}
 					 }
 					 $('#entity-data').append("<div class='list-group'> <a id='entity'" + j.toString() + " class='list-group-item'><h4 class='list-group-item-heading'>" + word + "</h4><p class='list-group-item-text'>" + string + "</p></a></div>");

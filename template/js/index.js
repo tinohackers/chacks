@@ -1,7 +1,7 @@
 $(document).ready(function() {
 	console.log("Page Loaded");
 
-	$('#about').hide();
+//	$('#about').hide();
 
 	$("#Snipify").click(function() {
 		console.log("inside submit button")
@@ -260,6 +260,7 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
     .attr("y", 50)
     .style("text-align", "center")
     .text("Sentiment over Time of Keywords");
+		window.location = 'index.html#jumphere';
 
 		// var l = c3.generate({
 		// 	bindto: '#sentiment0',

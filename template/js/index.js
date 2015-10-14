@@ -1,7 +1,7 @@
 $(document).ready(function() {
 	console.log("Page Loaded");
 
-//	$('#about').hide();
+	$('#about').hide();
 
 	$("#Snipify").click(function() {
 		console.log("inside submit button")

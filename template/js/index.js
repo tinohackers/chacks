@@ -260,7 +260,6 @@ function getTextData(inputText, dictionary, list_sentences, findTime){
     .attr("y", 50)
     .style("text-align", "center")
     .text("Sentiment over Time of Keywords");
-		window.location = 'index.html#jumphere';
 
 		// var l = c3.generate({
 		// 	bindto: '#sentiment0',

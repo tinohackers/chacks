@@ -14,6 +14,10 @@ $(document).ready(function() {
 				i += 2;
 			}
 			if(keep == true) {
+				// makes code work for playlist videos
+				if (url.charAt(i) == '&'){
+					break;
+				}
 				key += url.charAt(i)
 			}
 		}

@@ -3,6 +3,12 @@ $(document).ready(function() {
 
 	$('#about').hide();
 
+	$("#url-holder").keyup(function(event){
+    if(event.keyCode == 13){
+        $("#Snipify").click();
+    }
+	});
+
 	$("#Snipify").click(function() {
 		console.log("inside submit button")
 		var url = $("#url-holder").val()
